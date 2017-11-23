@@ -94,6 +94,7 @@ package:
         - example/handler.py
         - ../swagger/python-flask/**
         - ../common/example_server/**/**
+        - ../database/schema.psql
         - auth/**
 
 functions:
