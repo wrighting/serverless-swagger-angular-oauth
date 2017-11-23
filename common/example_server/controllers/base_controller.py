@@ -25,7 +25,7 @@ class BaseController():
 
     def _init_connection(self):
 
-        database_name = os.getenv('DATABASE','example'),
+        database_name = os.getenv('DATABASE','example')
         config = {
             'user': os.getenv('DB_USER',os.getenv('USER')),
             'database': database_name,
@@ -44,40 +44,60 @@ class BaseController():
                 conn = psycopg2.connect(connection_factory=LoggingConnection, **config )
                 conn.initialize(self._logger)
             except Exception as e:
-                print('1')
                 self._logger.exception("Database connection problem")
-                print('1a')
-                config['database'] = 'postgres'
-                print('1b')
-                conn = psycopg2.connect(connection_factory=LoggingConnection, **config )
-                print('1c')
-                conn.initialize(self._logger)
-                print('1d')
-                cur = conn.cursor()
-                print('CREATE DATABASE ' + database_name)
-                cur.execute('CREATE DATABASE ' + database_name)
-                print('1e')
-                cur.close()
-                conn.close()
-                self._tries = self._tries + 1
-                if self._tries < 2:
-                    return self._init_connection()
-                else:
-                    return None
-
-            if os.getenv('CREATE_SCHEMA_IF_MISSING', "false") == "true":
-                print('2')
-                cur = conn.cursor()
-                cur.execute("SET search_path TO " + database_name + ',public,contrib')
-                cur.execute("\d")
-                res = cur.fetchone()
-                if not res:
-                    cur.execute("\i database/schema.psql")
-
-                cur.close()
+                if os.getenv('CREATE_SCHEMA_IF_MISSING', "false") == "true":
+                    #Unlikely to be the problem
+                    config['database'] = 'postgres'
+                    conn = psycopg2.connect(connection_factory=LoggingConnection, **config )
+                    conn.initialize(self._logger)
+                    cur = conn.cursor()
+                    cur.execute('CREATE DATABASE ' + database_name)
+                    conn.commit()
+                    conn.close()
+                    self._tries = self._tries + 1
+                    if self._tries < 2:
+                        return self._init_connection()
+                    else:
+                        return None
         except Exception as e:
-            print('3')
             self._logger.exception("Database connection problem")
 
+        self._create_database(conn, database_name)
+
         return conn
+
+    def _create_database(self, conn, database_name):
+
+        if os.getenv('CREATE_SCHEMA_IF_MISSING', "false") == "true":
+            cur = conn.cursor()
+
+            cur.execute("""SELECT table_name FROM information_schema.tables
+                                  WHERE table_schema = %s""", (database_name,))
+            tables = 0;
+            for table in cur.fetchall():
+                tables = tables + 1
+                print(table)
+            if tables != 0:
+                cur.close()
+                return
+            #Can't use \i so this horrible parsing code instead
+            with open('database/schema.psql', 'r') as inp:
+                cmd = ''
+                for line in inp:
+                    line = line.rstrip('\r\n')
+                    line = line.rstrip('\n')
+                    if line.startswith('--'):
+                        pass
+                    elif line.startswith(' '):
+                        cmd = cmd + line
+                    elif line.endswith(';'):
+                        cmd = cmd + line
+                        print(cmd)
+                        cur.execute(cmd)
+                        conn.commit()
+                        cmd = ''
+                    else:
+                        cmd = cmd + line
+            inp.close()
+            cur.close()
 
