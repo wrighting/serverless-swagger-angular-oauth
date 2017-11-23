@@ -63,6 +63,9 @@ def download_example(event, context):
     """
 
 def download_examples(event, context):
+
+    example_controller.download_examples()
+
     body = {
         "message": "Go Serverless v1.0! Your function executed successfully!",
         "input": event
