@@ -58,9 +58,9 @@ class ExampleController(BaseController):
 
         cur = self._connection.cursor()
 
-        cur.execute('SELECT id, example_value2 FROM examples')
+        cur.execute('SELECT id, example_value FROM example')
 
-        for (eid, evalue) in cursor:
+        for (eid, evalue) in cur:
             print ('row!')
 
         cur.close()
