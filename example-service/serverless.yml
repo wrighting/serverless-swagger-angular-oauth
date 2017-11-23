@@ -35,6 +35,7 @@ provider:
     DB_PASSWORD: ${file(config/config.${self:provider.stage}.json):db_password}
     DB_HOST: ${file(config/config.${self:provider.stage}.json):db_host}
     AUTH_PROFILE_URL: ${file(config/config.${self:provider.stage}.json):auth_profile}
+    CREATE_SCHEMA_IF_MISSING: ${file(config/config.${self:provider.stage}.json):create_schema_if_missing}
   vpc:
     securityGroupIds:
       - "Fn::GetAtt": ServerlessSecurityGroup.GroupId
@@ -91,7 +92,7 @@ package:
     include:
         - example/handler.py
         - ../swagger/python-flask/**
-        - ../common/example-server/**/**
+        - ../common/example_server/**/**
         - auth/**
 
 functions:
