@@ -7,6 +7,7 @@ import json
 
 import os
 import requests
+from requests.exceptions import ConnectTimeout
 
 def auth(event, context):
 
@@ -47,8 +48,13 @@ def auth(event, context):
     if tokens[0] == 'Bearer':
         token = tokens[1]
 
-    args = { 'access_token': token }
-    r = requests.get(os.getenv('AUTH_PROFILE_URL'), args, timeout=3)
+    try:
+        args = { 'access_token': token }
+        r = requests.get(os.getenv('AUTH_PROFILE_URL'), args, timeout=4)
+    except ConnectTimeout as ct:
+        print (repr(ct))
+        raise Exception('Unauthorized')
+
 #    print (repr(r.text))
     if r.status_code == 200:
         user = json.loads(r.text)
