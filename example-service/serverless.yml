@@ -1,0 +1,207 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: wrighting-example-service
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: eu-west-2
+  stage: ${opt:stage, 'dev'}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterface
+      Resource: "*"
+  environment:
+    DB_USER: ${file(config/config.${self:provider.stage}.json):db_user}
+    DATABASE: ${file(config/config.${self:provider.stage}.json):database}
+    DB_PASSWORD: ${file(config/config.${self:provider.stage}.json):db_password}
+    DB_HOST: ${file(config/config.${self:provider.stage}.json):db_host}
+    AUTH_PROFILE_URL: ${file(config/config.${self:provider.stage}.json):auth_profile}
+  vpc:
+    securityGroupIds:
+      - "Fn::GetAtt": ServerlessSecurityGroup.GroupId
+    subnetIds:
+      - Ref: ServerlessSubnetA
+      - Ref: ServerlessSubnetB
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+plugins:
+      - serverless-python-requirements
+
+custom:
+      pythonRequirements:
+              dockerizePip: true
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:ListBucket"
+#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#    - Effect: "Allow"
+#      Action:
+#        - "s3:PutObject"
+#      Resource:
+#        Fn::Join:
+#          - ""
+#          - - "arn:aws:s3:::"
+#            - "Ref" : "ServerlessDeploymentBucket"
+#            - "/*"
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.py
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.py
+#    - exclude-me-dir/**
+package:
+    exclude:
+        - requirements.txt
+        - serverless.yml
+        - node_modules/**
+        - package.json
+        - package-lock.json
+    include:
+        - example/handler.py
+        - ../swagger/python-flask/**
+        - ../common/example-server/**/**
+        - auth/**
+
+functions:
+  create_example:
+    handler: example/handler.create_example
+    events:
+      - http:
+          path: sims-backbone-service/v1/example
+          method: post
+          cors: true
+
+  example:
+    handler: example/handler.download_example
+    events:
+      - http:
+          path: sims-backbone-service/v1/example/{example_id}
+          method: get
+          cors: true
+          request:
+            parameters:
+              paths:
+                example_id: true
+
+  examples:
+    handler: example/handler.download_examples
+    events:
+      - http:
+          path: sims-backbone-service/v1/examples
+          method: get
+          cors: true
+          request:
+            parameters:
+              query:
+                study_name: true
+                start: false
+                count: false
+                orderby: false
+
+  example_update:
+    handler: example/handler.update_example
+    events:
+      - http:
+          path: sims-backbone-service/v1/example/{example_id}
+          method: put
+          cors: true
+          request:
+              parameters:
+                  paths:
+                      example_id: true
+
+resources:
+  Resources:
+    ServerlessVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: "10.0.0.0/16"
+    ServerlessSubnetA:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.0.1.0/24"
+    ServerlessSubnetB:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}b
+        CidrBlock: "10.0.2.0/24"
+    ServerlessSecurityGroup:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: SecurityGroup for Serverless Functions
+        VpcId:
+          Ref: ServerlessVPC
+    ServerlessStorageSecurityGroup:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Ingress for Memcached Cluster & RDS Instance
+        VpcId:
+          Ref: ServerlessVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '5432'
+          ToPort: '5432'
+          SourceSecurityGroupId:
+            Ref: ServerlessSecurityGroup
+    ServerlessRDSSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: "RDS Subnet Group"
+        SubnetIds:
+        - Ref: ServerlessSubnetA
+        - Ref: ServerlessSubnetB
+    ServerlessRDSCluster:
+      DependsOn: ServerlessStorageSecurityGroup
+      Type: AWS::RDS::DBInstance
+      Properties:
+        Engine: Postgres
+        DBName: ${file(config/config.${self:provider.stage}.json):database}
+        MasterUsername: ${file(config/config.${self:provider.stage}.json):db_user}
+        MasterUserPassword: ${file(config/config.${self:provider.stage}.json):db_password}
+        DBInstanceClass: db.t2.micro
+        AllocatedStorage: 10
+        VPCSecurityGroups:
+        - "Fn::GetAtt": ServerlessStorageSecurityGroup.GroupId
+        DBSubnetGroupName:
+          Ref: ServerlessRDSSubnetGroup
