@@ -42,6 +42,7 @@ provider:
     subnetIds:
       - Ref: ServerlessSubnetA
       - Ref: ServerlessSubnetB
+      - Ref: PublicSubnet
 
 # you can overwrite defaults here
 #  stage: dev
@@ -96,21 +97,33 @@ package:
         - auth/**
 
 functions:
+  auth_func:
+    handler: auth/handler.auth
   create_example:
     handler: example/handler.create_example
     events:
       - http:
-          path: sims-backbone-service/v1/example
+          path: example-service/v1/example
           method: post
           cors: true
+          authorizer:
+            name: auth_func
+            type: request
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: .*
 
   example:
     handler: example/handler.download_example
     events:
       - http:
-          path: sims-backbone-service/v1/example/{example_id}
+          path: example-service/v1/example/{example_id}
           method: get
           cors: true
+          authorizer:
+            name: auth_func
+            type: request
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: .*
           request:
             parameters:
               paths:
@@ -120,9 +133,14 @@ functions:
     handler: example/handler.download_examples
     events:
       - http:
-          path: sims-backbone-service/v1/examples
+          path: example-service/v1/examples
           method: get
           cors: true
+          authorizer:
+            name: auth_func
+            type: request
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: .*
           request:
             parameters:
               query:
@@ -135,9 +153,14 @@ functions:
     handler: example/handler.update_example
     events:
       - http:
-          path: sims-backbone-service/v1/example/{example_id}
+          path: example-service/v1/example/{example_id}
           method: put
           cors: true
+          authorizer:
+            name: auth_func
+            type: request
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: .*
           request:
               parameters:
                   paths:
@@ -145,6 +168,16 @@ functions:
 
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
     ServerlessVPC:
       Type: AWS::EC2::VPC
       Properties:
@@ -165,6 +198,101 @@ resources:
           Ref: ServerlessVPC
         AvailabilityZone: ${self:provider.region}b
         CidrBlock: "10.0.2.0/24"
+    PublicSubnet:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.0.3.0/24"
+        MapPublicIpOnLaunch: True
+    InternetGateway:
+      Type: "AWS::EC2::InternetGateway"
+    NatEIP:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+    NatGateway:
+      Type: AWS::EC2::NatGateway
+      DependsOn: VPCGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+          - NatEIP
+          - AllocationId
+        SubnetId:
+          Ref: PublicSubnet
+    ServerlessSubnetARouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    ServerlessSubnetARoute:
+      Type: AWS::EC2::Route
+      DependsOn: VPCGateway
+      Properties:
+        RouteTableId:
+          Ref: ServerlessSubnetARouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGateway
+    SubnetRouteTableServerlessSubnetA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessSubnetA
+        RouteTableId:
+          Ref: ServerlessSubnetARouteTable
+    ServerlessSubnetBRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    ServerlessSubnetBRoute:
+      Type: AWS::EC2::Route
+      DependsOn: VPCGateway
+      Properties:
+        RouteTableId:
+          Ref: ServerlessSubnetBRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGateway
+    SubnetRouteTableServerlessSubnetB:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessSubnetB
+        RouteTableId:
+          Ref: ServerlessSubnetBRouteTable
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    PublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: VPCGateway
+      Properties:
+        RouteTableId:
+          Ref: PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGateway
+    SubnetRouteTablePublic1:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnet
+        RouteTableId:
+          Ref: PublicRouteTable
+    VPCGateway:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        InternetGatewayId:
+          Ref: InternetGateway
+        VpcId:
+          Ref: ServerlessVPC
     ServerlessSecurityGroup:
       DependsOn: ServerlessVPC
       Type: AWS::EC2::SecurityGroup
