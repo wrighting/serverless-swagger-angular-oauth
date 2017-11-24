@@ -44,6 +44,7 @@ class BaseController():
                 conn = psycopg2.connect(connection_factory=LoggingConnection, **config )
                 conn.initialize(self._logger)
             except Exception as e:
+                print("Database connection problem")
                 self._logger.exception("Database connection problem")
                 if os.getenv('CREATE_SCHEMA_IF_MISSING', "false") == "true":
                     #Unlikely to be the problem
@@ -71,12 +72,13 @@ class BaseController():
         if os.getenv('CREATE_SCHEMA_IF_MISSING', "false") == "true":
             cur = conn.cursor()
 
-            cur.execute("""SELECT table_name FROM information_schema.tables
-                                  WHERE table_schema = %s""", (database_name,))
+            cur.execute("""SELECT table_name, table_schema FROM information_schema.tables
+                                  WHERE table_schema = %s""", ('public',))
             tables = 0;
-            for table in cur.fetchall():
+            for (table,schema) in cur.fetchall():
                 tables = tables + 1
-                print(table)
+#                print(table)
+#                print(schema)
             if tables != 0:
                 cur.close()
                 return
