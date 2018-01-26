@@ -177,6 +177,11 @@ functions:
 
 resources:
   Resources:
+    ApiGatewayRestApi:
+      Type: "AWS::ApiGateway::RestApi"
+      Properties:
+        BinaryMediaTypes:
+          - "application/json"
     GatewayResponseDefault4XX:
       Type: 'AWS::ApiGateway::GatewayResponse'
       Properties:

@@ -20,7 +20,11 @@ def create_response(event, retcode, value):
     gzip = False
     if 'Accept-Encoding' in event['headers']:
         if 'gzip' in event['headers']['Accept-Encoding']:
-            gzip = True
+            if 'Accept' in event['headers']:
+                #Otherwise base64 decoding doesn't happen
+                #See gateway settings in serverless.yml
+                if 'application/json' in event['headers']['Accept']:
+                    gzip = True
 
     if gzip:
         return {
