@@ -30,19 +30,18 @@ provider:
         - ec2:DeleteNetworkInterface
       Resource: "*"
   environment:
-    DB_USER: ${file(config/config.${self:provider.stage}.json):db_user}
-    DATABASE: ${file(config/config.${self:provider.stage}.json):database}
-    DB_PASSWORD: ${file(config/config.${self:provider.stage}.json):db_password}
-    DB_HOST:
-            Fn::GetAtt: [ ServerlessRDSCluster, Endpoint.Address ]
-    AUTH_PROFILE_URL: ${file(config/config.${self:provider.stage}.json):auth_profile}
-    CREATE_SCHEMA_IF_MISSING: ${file(config/config.${self:provider.stage}.json):create_schema_if_missing}
+    DB_USER: ${file(../config/config.${self:provider.stage}.json):db_user}
+    DATABASE: ${file(../config/config.${self:provider.stage}.json):database}
+    DB_PASSWORD: ${file(../config/config.${self:provider.stage}.json):db_password}
+    DB_HOST: ${cf:wrighting-example-service-infra-${self:provider.stage}.DbHostOutput}
+    AUTH_PROFILE_URL: ${file(../config/config.${self:provider.stage}.json):auth_profile}
+    CREATE_SCHEMA_IF_MISSING: ${file(../config/config.${self:provider.stage}.json):create_schema_if_missing}
   vpc:
     securityGroupIds:
-      - "Fn::GetAtt": ServerlessSecurityGroup.GroupId
+      - ${cf:wrighting-example-service-infra-${self:provider.stage}.ServerlessSecurityGroupOutput}
     subnetIds:
-      - Ref: PublicSubnetA
-      - Ref: PublicSubnetB
+      - 'Fn::ImportValue': wrighting-example-service-infra:PublicSubnetA-${self:provider.stage}
+      - 'Fn::ImportValue': wrighting-example-service-infra:PublicSubnetB-${self:provider.stage}
 
 # you can overwrite defaults here
 #  stage: dev
@@ -100,14 +99,7 @@ package:
         - ../util/**
 
 functions:
-  auth_func:
-    handler: auth/handler.auth
-    vpc:
-        securityGroupIds:
-          - "Fn::GetAtt": ServerlessAuthSecurityGroup.GroupId
-        subnetIds:
-          - Ref: ServerlessSubnetA
-          - Ref: ServerlessSubnetB
+
   create_example:
     handler: example/handler.create_example
     events:
@@ -116,7 +108,7 @@ functions:
           method: post
           cors: true
           authorizer:
-            name: auth_func
+            arn: ${cf:wrighting-example-service-infra-${self:provider.stage}.AuthFunc}
             type: request
             identitySource: method.request.header.Authorization
             identityValidationExpression: .*
@@ -129,7 +121,7 @@ functions:
           method: get
           cors: true
           authorizer:
-            name: auth_func
+            arn: ${cf:wrighting-example-service-infra-${self:provider.stage}.AuthFunc}
             type: request
             identitySource: method.request.header.Authorization
             identityValidationExpression: .*
@@ -146,7 +138,7 @@ functions:
           method: get
           cors: true
           authorizer:
-            name: auth_func
+            arn: ${cf:wrighting-example-service-infra-${self:provider.stage}.AuthFunc}
             type: request
             identitySource: method.request.header.Authorization
             identityValidationExpression: .*
@@ -166,7 +158,7 @@ functions:
           method: put
           cors: true
           authorizer:
-            name: auth_func
+            arn: ${cf:wrighting-example-service-infra-${self:provider.stage}.AuthFunc}
             type: request
             identitySource: method.request.header.Authorization
             identityValidationExpression: .*
@@ -175,226 +167,3 @@ functions:
                   paths:
                       example_id: true
 
-resources:
-  Resources:
-    ApiGatewayRestApi:
-      Type: "AWS::ApiGateway::RestApi"
-      Properties:
-        BinaryMediaTypes:
-          - "application/json"
-    GatewayResponseDefault4XX:
-      Type: 'AWS::ApiGateway::GatewayResponse'
-      Properties:
-        ResponseParameters:
-          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
-        ResponseType: DEFAULT_4XX
-        RestApiId:
-          Ref: 'ApiGatewayRestApi'
-    ServerlessVPC:
-      Type: AWS::EC2::VPC
-      Properties:
-        CidrBlock: "10.0.0.0/16"
-    ServerlessSubnetA:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:provider.region}a
-        CidrBlock: "10.0.1.0/24"
-    ServerlessSubnetB:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:provider.region}b
-        CidrBlock: "10.0.2.0/24"
-    PublicSubnetA:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:provider.region}a
-        CidrBlock: "10.0.3.0/24"
-        MapPublicIpOnLaunch: True
-    PublicSubnetB:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::Subnet
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-        AvailabilityZone: ${self:provider.region}b
-        CidrBlock: "10.0.4.0/24"
-    InternetGateway:
-      Type: "AWS::EC2::InternetGateway"
-    NatEIPA:
-      Type: AWS::EC2::EIP
-      Properties:
-        Domain: vpc
-    NatGatewayA:
-      Type: AWS::EC2::NatGateway
-      DependsOn: VPCGateway
-      Properties:
-        AllocationId:
-          Fn::GetAtt:
-          - NatEIPA
-          - AllocationId
-        SubnetId:
-          Ref: PublicSubnetA
-    NatEIPB:
-      Type: AWS::EC2::EIP
-      Properties:
-        Domain: vpc
-    NatGatewayB:
-      Type: AWS::EC2::NatGateway
-      DependsOn: VPCGateway
-      Properties:
-        AllocationId:
-          Fn::GetAtt:
-          - NatEIPB
-          - AllocationId
-        SubnetId:
-          Ref: PublicSubnetB
-    ServerlessSubnetARouteTable:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-    ServerlessSubnetARoute:
-      Type: AWS::EC2::Route
-      DependsOn: VPCGateway
-      Properties:
-        RouteTableId:
-          Ref: ServerlessSubnetARouteTable
-        DestinationCidrBlock: 0.0.0.0/0
-        NatGatewayId:
-          Ref: NatGatewayA
-    SubnetRouteTableServerlessSubnetA:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: ServerlessSubnetA
-        RouteTableId:
-          Ref: ServerlessSubnetARouteTable
-    ServerlessSubnetBRouteTable:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-    ServerlessSubnetBRoute:
-      Type: AWS::EC2::Route
-      DependsOn: VPCGateway
-      Properties:
-        RouteTableId:
-          Ref: ServerlessSubnetBRouteTable
-        DestinationCidrBlock: 0.0.0.0/0
-        NatGatewayId:
-          Ref: NatGatewayB
-    SubnetRouteTableServerlessSubnetB:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: ServerlessSubnetB
-        RouteTableId:
-          Ref: ServerlessSubnetBRouteTable
-    PublicRouteTableA:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-    PublicRouteA:
-      Type: AWS::EC2::Route
-      DependsOn: VPCGateway
-      Properties:
-        RouteTableId:
-          Ref: PublicRouteTableA
-        DestinationCidrBlock: 0.0.0.0/0
-        GatewayId:
-          Ref: InternetGateway
-    SubnetRouteTablePublicA:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: PublicSubnetA
-        RouteTableId:
-          Ref: PublicRouteTableA
-    PublicRouteTableB:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: ServerlessVPC
-    PublicRouteB:
-      Type: AWS::EC2::Route
-      DependsOn: VPCGateway
-      Properties:
-        RouteTableId:
-          Ref: PublicRouteTableB
-        DestinationCidrBlock: 0.0.0.0/0
-        GatewayId:
-          Ref: InternetGateway
-    SubnetRouteTablePublicB:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: PublicSubnetB
-        RouteTableId:
-          Ref: PublicRouteTableB
-    VPCGateway:
-      Type: AWS::EC2::VPCGatewayAttachment
-      Properties:
-        InternetGatewayId:
-          Ref: InternetGateway
-        VpcId:
-          Ref: ServerlessVPC
-    ServerlessAuthSecurityGroup:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: SecurityGroup for Serverless Functions
-        VpcId:
-          Ref: ServerlessVPC
-    ServerlessSecurityGroup:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: SecurityGroup for Serverless Functions
-        VpcId:
-          Ref: ServerlessVPC
-    ServerlessStorageSecurityGroup:
-      DependsOn: ServerlessVPC
-      Type: AWS::EC2::SecurityGroup
-      Properties:
-        GroupDescription: Ingress for Memcached Cluster & RDS Instance
-        VpcId:
-          Ref: ServerlessVPC
-        SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '5432'
-          ToPort: '5432'
-          SourceSecurityGroupId:
-            Ref: ServerlessSecurityGroup
-    ServerlessRDSSubnetGroup:
-      Type: AWS::RDS::DBSubnetGroup
-      Properties:
-        DBSubnetGroupDescription: "RDS Subnet Group"
-        SubnetIds:
-        - Ref: ServerlessSubnetA
-        - Ref: ServerlessSubnetB
-    ServerlessRDSCluster:
-      DependsOn: ServerlessStorageSecurityGroup
-      Type: AWS::RDS::DBInstance
-      Properties:
-        Engine: Postgres
-        DBName: ${file(config/config.${self:provider.stage}.json):database}
-        MasterUsername: ${file(config/config.${self:provider.stage}.json):db_user}
-        MasterUserPassword: ${file(config/config.${self:provider.stage}.json):db_password}
-        DBInstanceClass: db.t2.micro
-        AllocatedStorage: 10
-        VPCSecurityGroups:
-        - "Fn::GetAtt": ServerlessStorageSecurityGroup.GroupId
-        DBSubnetGroupName:
-          Ref: ServerlessRDSSubnetGroup

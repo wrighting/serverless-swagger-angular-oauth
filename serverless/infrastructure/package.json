@@ -1,0 +1,25 @@
+{
+    "name": "wrighting-example-service",
+    "version": "1.0.0",
+    "description": "",
+    "author": "Ian Wright",
+    "license": "ISC",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "run download event sets function",
+            "program": "${workspaceRoot}/node_modules/.bin/sls",
+            "args": [
+                "invoke",
+                "local",
+                "-f",
+                "download_event_sets"
+            ]
+        }
+    ],
+    "dependencies": {
+        "serverless": "^1.25.0",
+        "serverless-python-requirements": "^3.3.0"
+    }
+}
