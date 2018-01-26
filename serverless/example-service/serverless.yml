@@ -90,12 +90,14 @@ package:
         - node_modules/**
         - package.json
         - package-lock.json
+        - config/**
     include:
         - example/handler.py
-        - ../swagger/python-flask/**
-        - ../common/example_server/**/**
-        - ../database/schema.psql
+        - ../../swagger/python-flask/**/**
+        - ../../common/example_server/**/**
+        - ../../database/schema.psql
         - auth/**
+        - ../util/**
 
 functions:
   auth_func:

@@ -103,3 +103,31 @@ class BaseController():
             inp.close()
             cur.close()
 
+    """
+    Convert the connexion token_info (OAuth) response into something that can be made consistent
+    with AWS Custom Auth details
+    """
+    def token_info(self, tok_info):
+        resp = []
+        if tok_info and 'memberOf' in tok_info:
+            for auth_grp in tok_info['memberOf']:
+                dns = auth_grp.split(',')
+                cn = dns[0].split('=')[1]
+                resp.append(cn)
+
+        return resp
+
+    """
+    Convert AWS authorizer into consistent format
+    """
+    def authorizer(self, authorizer):
+        resp = []
+        return resp
+
+    """
+    Throw an exception if no permission
+    """
+    def check_permissions(self, perms):
+        pass
+
+
