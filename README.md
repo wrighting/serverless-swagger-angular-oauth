@@ -8,9 +8,6 @@ In example-service run:
 
 sls deploy -v
 
-You will now be able to add the db_host value in your config.dev.json as it will have been created
-and you can get the hostname from RDS
-
 If you have trouble creating your stack then it's worth checking the [Cloud Formation Console](https://eu-west-2.console.aws.amazon.com/cloudformation/home)
 
 e.g. I've run into the limit of 5 VPC per region

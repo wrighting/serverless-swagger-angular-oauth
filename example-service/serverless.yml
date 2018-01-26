@@ -33,7 +33,8 @@ provider:
     DB_USER: ${file(config/config.${self:provider.stage}.json):db_user}
     DATABASE: ${file(config/config.${self:provider.stage}.json):database}
     DB_PASSWORD: ${file(config/config.${self:provider.stage}.json):db_password}
-    DB_HOST: ${file(config/config.${self:provider.stage}.json):db_host}
+    DB_HOST:
+            Fn::GetAtt: [ ServerlessRDSCluster, Endpoint.Address ]
     AUTH_PROFILE_URL: ${file(config/config.${self:provider.stage}.json):auth_profile}
     CREATE_SCHEMA_IF_MISSING: ${file(config/config.${self:provider.stage}.json):create_schema_if_missing}
   vpc:

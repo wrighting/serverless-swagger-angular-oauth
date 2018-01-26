@@ -2,7 +2,6 @@
     "db_user": "",
     "database": "",
     "db_password": "",
-    "db_host": "",
     "auth_profile": "",
     "create_schema_if_missing": "false"
 }
