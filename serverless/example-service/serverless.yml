@@ -42,6 +42,9 @@ provider:
     subnetIds:
       - 'Fn::ImportValue': wrighting-example-service-infra:PublicSubnetA-${self:provider.stage}
       - 'Fn::ImportValue': wrighting-example-service-infra:PublicSubnetB-${self:provider.stage}
+  apiGateway:
+    restApiId: ${cf:wrighting-example-service-infra-${self:provider.stage}.ApiGatewayRestApi}
+    restApiRootResourceId: ${cf:wrighting-example-service-infra-${self:provider.stage}.ApiGatewayRestApiRootResource}
 
 # you can overwrite defaults here
 #  stage: dev

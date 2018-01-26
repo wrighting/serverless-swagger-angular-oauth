@@ -374,6 +374,11 @@ resources:
           Ref: 'ApiGatewayRestApi'
         Export:
           Name: ${self:service}:ApiGatewayRestApi-${self:provider.stage}
+      ApiGatewayRestApiRootResource:
+        Value:
+          Fn::GetAtt: [ ApiGatewayRestApi, RootResourceId ]
+        Export:
+          Name: ${self:service}:ApiGatewayRestApiRootResource-${self:provider.stage}
       AuthFunc:
         Value:
           Fn::GetAtt: [ "AuthFuncLambdaFunction", "Arn" ]
