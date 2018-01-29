@@ -18,6 +18,7 @@ from example_server.controllers.example_controller import ExampleController
 from swagger_server.models.example import Example
 
 from util.response_util import create_response
+from util.request_util import get_body
 
 example_controller = ExampleController()
 
@@ -26,7 +27,7 @@ def create_example(event, context):
     user = event['requestContext']['authorizer']['principalId']
     auth = example_controller.authorizer(event['requestContext']['authorizer'])
 
-    input_body = Example.from_dict(json.loads(event["body"]))
+    input_body = Example.from_dict(get_body(event))
 
     example = input_body
 
@@ -64,7 +65,7 @@ def update_example(event, context):
     if 'pathParameters' in event:
         example_id = event["pathParameters"]["example_id"]
 
-    input_body = Example.from_dict(json.loads(event["body"]))
+    input_body = Example.from_dict(get_body(event))
 
     example = input_body
 
