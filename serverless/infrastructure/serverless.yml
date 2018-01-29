@@ -349,16 +349,6 @@ resources:
           Ref: PublicSubnetB
         Export:
           Name: ${self:service}:PublicSubnetB-${self:provider.stage}
-      ServerlessSubnetAOutput:
-        Value:
-          Ref: ServerlessSubnetA
-        Export:
-          Name: ${self:service}:ServerlessSubnetA-${self:provider.stage}
-      ServerlessSubnetBOutput:
-        Value:
-          Ref: ServerlessSubnetB
-        Export:
-          Name: ${self:service}:ServerlessSubnetB-${self:provider.stage}
       ServerlessSecurityGroupOutput:
         Value:
           Ref: ServerlessSecurityGroup

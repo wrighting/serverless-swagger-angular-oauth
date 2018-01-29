@@ -15,8 +15,7 @@ def gzip_b64encode(data):
 
 def create_response(event, retcode, value):
 
-    response_dict = value
-    #response_dict = value.to_dict()
+    response_dict = value.to_dict()
     gzip = False
     if 'Accept-Encoding' in event['headers']:
         if 'gzip' in event['headers']['Accept-Encoding']:

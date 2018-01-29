@@ -16,8 +16,8 @@ SET row_security = off;
 
 SET search_path = public, pg_catalog;
 
-DROP TABLE public.example;
-DROP SEQUENCE public.example_id_seq;
+DROP TABLE IF EXISTS public.example;
+DROP SEQUENCE IF EXISTS public.example_id_seq;
 DROP EXTENSION plpgsql;
 DROP SCHEMA public;
 --
@@ -45,7 +45,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
 --
 
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+-- COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
 SET search_path = public, pg_catalog;
