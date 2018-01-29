@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.5
--- Dumped by pg_dump version 9.6.5
+-- Dumped from database version 10.1
+-- Dumped by pg_dump version 10.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -14,40 +14,44 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
 
+SET search_path = public, pg_catalog;
+
+DROP TABLE public.example;
+DROP SEQUENCE public.example_id_seq;
+DROP EXTENSION plpgsql;
+DROP SCHEMA public;
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA public;
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: -
 --
 
--- COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
-SET search_path = example_service, public, pg_catalog;
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
+SET search_path = public, pg_catalog;
 
 --
--- Name: example; Type: TABLE; Schema: public; Owner: example_admin
---
-
-CREATE TABLE example (
-    id integer NOT NULL,
-    example_value character varying(100)
-);
-
-
-ALTER TABLE example OWNER TO example_admin;
-
---
--- Name: example_id_seq; Type: SEQUENCE; Schema: public; Owner: example_admin
+-- Name: example_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE example_id_seq
@@ -58,28 +62,25 @@ CREATE SEQUENCE example_id_seq
     CACHE 1;
 
 
-ALTER TABLE example_id_seq OWNER TO example_admin;
+SET default_tablespace = '';
+
+SET default_with_oids = false;
 
 --
--- Name: example_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: example_admin
+-- Name: example; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE example_id_seq OWNED BY example.id;
-
-
---
--- Name: example id; Type: DEFAULT; Schema: public; Owner: example_admin
---
-
-ALTER TABLE ONLY example ALTER COLUMN id SET DEFAULT nextval('example_id_seq'::regclass);
+CREATE TABLE example (
+    example_id integer DEFAULT nextval('example_id_seq'::regclass) NOT NULL,
+    example_value character varying(100)
+);
 
 
 --
--- Name: example example_pkey; Type: CONSTRAINT; Schema: public; Owner: example_admin
+-- Name: public; Type: ACL; Schema: -; Owner: -
 --
 
-ALTER TABLE ONLY example
-    ADD CONSTRAINT example_pkey PRIMARY KEY (id);
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --

@@ -1,2 +1,3 @@
 example-service/config/config.dev.json
 .*.swp
+__pycache__/

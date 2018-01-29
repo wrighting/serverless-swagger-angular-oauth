@@ -1,0 +1,165 @@
+---
+swagger: "2.0"
+host: "localhost"
+basePath: "/v1"
+info:
+  description: "Example"
+  version: "1.0.0"
+  title: "Example"
+  contact:
+    email: "tech@wrighting.org"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+tags:
+- name: "example"
+  description: "Everything about your Examples"
+schemes:
+- "http"
+#security:
+#    - example_auth: []
+paths:
+  /example:
+    post:
+      tags:
+      - "example"
+      summary: "Add a new example"
+      description: ""
+      operationId: "createExample"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Example object that needs to be added to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/Example"
+      responses:
+        201:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Example"
+        405:
+          description: "Invalid input"
+    put:
+      tags:
+      - "example"
+      summary: "Update an existing example"
+      description: ""
+      operationId: "updateExample"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Example object that needs to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/Example"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Example"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Example not found"
+        405:
+          description: "Validation exception"
+  /example/{exampleId}:
+    get:
+      tags:
+      - "example"
+      summary: "Find example by ID"
+      description: "Returns a single example"
+      operationId: "downloadExample"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "exampleId"
+        in: "path"
+        description: "ID of example to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Example"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Example not found"
+    delete:
+      tags:
+      - "example"
+      summary: "Deletes a example"
+      description: ""
+      operationId: "deleteExample"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "exampleId"
+        in: "path"
+        description: "Example id to delete"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Example not found"
+  /examples:
+    get:
+      tags:
+      - "example"
+      summary: "Find example by ID"
+      description: "Returns a single example"
+      operationId: "downloadExamples"
+      produces:
+      - "application/json"
+      parameters:
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Examples"
+securityDefinitions:
+  example_auth:
+    type: "oauth2"
+    #authorizationUrl: "http://example.swagger.io/oauth/dialog"
+    authorizationUrl: "https://myssohost/sso/oauth2.0/authorize"
+    tokenUrl: "https://myssohost/sso/oauth2.0/accessToken"
+    x-tokenInfoUrl: "https://myssohost/sso/oauth2.0/profile"
+    flow: "accessCode"
+    scopes:
+      write:examples: "modify examples in your account"
+      read:examples: "read your examples"
+definitions:
+  Example:
+    type: "object"
+    required:
+    - "exampleValue"
+    properties:
+      example_id:
+        type: "integer"
+        format: "int64"
+      example_value:
+        type: "string"
+  Examples:
+    type: "object"
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Example'
+      count:
+        type: integer
