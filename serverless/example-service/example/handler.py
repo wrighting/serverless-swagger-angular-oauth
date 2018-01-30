@@ -72,3 +72,16 @@ def update_example(event, context):
     value, retcode = example_controller.update_example(example_id, example, user, auth)
 
     return create_response(event, retcode, value)
+
+def delete_example(event, context):
+
+    user = event['requestContext']['authorizer']['principalId']
+    auth = example_controller.authorizer(event['requestContext']['authorizer'])
+
+    if 'pathParameters' in event:
+        example_id = event["pathParameters"]["example_id"]
+
+    value, retcode = example_controller.delete_example(example_id, user, auth)
+
+    return create_response(event, retcode, value)
+

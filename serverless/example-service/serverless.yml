@@ -153,7 +153,7 @@ functions:
                 count: false
                 orderby: false
 
-  example_update:
+  update_example:
     handler: example/handler.update_example
     events:
       - http:
@@ -169,4 +169,21 @@ functions:
               parameters:
                   paths:
                       example_id: true
+
+  delete_example:
+    handler: example/handler.delete_example
+    events:
+      - http:
+          path: example-service/v1/example/{example_id}
+          method: delete
+          cors: true
+          authorizer:
+            arn: ${cf:wrighting-example-service-infra-${self:provider.stage}.AuthFunc}
+            type: request
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: .*
+          request:
+            parameters:
+              paths:
+                example_id: true
 
