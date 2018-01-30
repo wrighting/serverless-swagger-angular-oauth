@@ -62,7 +62,7 @@ custom:
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#      Resource: "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:PutObject"
@@ -187,3 +187,25 @@ functions:
               paths:
                 example_id: true
 
+resources:
+  Resources:
+    CreateUnderscoreexampleLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"
+    ExampleLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"
+    ExamplesLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"
+    UpdateUnderscoreexampleLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"
+    DeleteUnderscoreexampleLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"

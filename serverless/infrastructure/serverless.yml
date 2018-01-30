@@ -333,6 +333,10 @@ resources:
         - "Fn::GetAtt": ServerlessStorageSecurityGroup.GroupId
         DBSubnetGroupName:
           Ref: ServerlessRDSSubnetGroup
+    AuthFuncLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: "30"
   Outputs:
       ServerlessVPCOutput:
         Value:
