@@ -94,7 +94,7 @@ class ExampleController(BaseController):
         return ret_value, ret_code
 
 
-    def update_example(self, example, user=None, auths=None):
+    def update_example(self, example_id, example, user=None, auths=None):
         """
         updates an example
         
@@ -107,10 +107,13 @@ class ExampleController(BaseController):
         ret_code = 200
         ret_value = None
 
+        if int(example.example_id) != int(example_id):
+            return None, 409
+
         with self._connection:
           with self._connection.cursor() as cursor:
             cursor.execute('''UPDATE example SET example_value = %s WHERE example_id = %s''',
-                           (example.example_value, example.example_id))
+                           (example.example_value, example_id))
 
 
         return ret_value, ret_code

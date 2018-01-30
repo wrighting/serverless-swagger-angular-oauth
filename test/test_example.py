@@ -55,7 +55,7 @@ class TestExample(TestBase):
             loc = swagger_client.Example(example_id=None, example_value='An Example created for update')
             created = api_instance.create_example(loc)
             created.example_value = 'Updated example'
-            api_instance.update_example(created)
+            api_instance.update_example(created.example_id, created)
             fetched = api_instance.download_example(created.example_id)
             self.assertEqual(created, fetched, "create response != download response")
             api_instance.delete_example(created.example_id)

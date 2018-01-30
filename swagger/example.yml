@@ -16,8 +16,8 @@ tags:
   description: "Everything about your Examples"
 schemes:
 - "http"
-#security:
-#    - example_auth: []
+security:
+    - example_auth: []
 paths:
   /example:
     post:
@@ -44,34 +44,6 @@ paths:
             $ref: "#/definitions/Example"
         405:
           description: "Invalid input"
-    put:
-      tags:
-      - "example"
-      summary: "Update an existing example"
-      description: ""
-      operationId: "updateExample"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "Example object that needs to be added"
-        required: true
-        schema:
-          $ref: "#/definitions/Example"
-      responses:
-        200:
-          description: "successful operation"
-          schema:
-            $ref: "#/definitions/Example"
-        400:
-          description: "Invalid ID supplied"
-        404:
-          description: "Example not found"
-        405:
-          description: "Validation exception"
   /example/{exampleId}:
     get:
       tags:
@@ -97,6 +69,42 @@ paths:
           description: "Invalid ID supplied"
         404:
           description: "Example not found"
+    put:
+      tags:
+      - "example"
+      summary: "Update an existing example"
+      description: ""
+      operationId: "updateExample"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "exampleId"
+        in: "path"
+        description: "ID of example to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "body"
+        description: "Example object that needs to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/Example"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Example"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Example not found"
+        405:
+          description: "Validation exception"
+        409:
+          description: "Conflict Validation exception"
     delete:
       tags:
       - "example"
